@@ -1,0 +1,97 @@
+.data
+angle_prompt: .asciiz "Enter the angle in degrees (0 to 360): "
+result_msg: .asciiz "The sine of the angle is: "
+
+.text
+.globl main
+
+# Function to calculate factorial
+fact:
+    move $t1, $ra   # Save return address in $t1
+    li $t2, 1    # Initialize factorial to 1
+    li $t3, 1    # Initialize counter to 1
+
+fact_loop:
+    bge $t3, $a0, fact_done  # Exit loop if counter >= input
+    mul $t2, $t2, $t3    # Multiply factorial by counter
+    addi $t3, $t3, 1    # Increment counter
+    j fact_loop
+
+fact_done:
+    move $v0, $t2    # Return factorial in $v0
+    move $ra, $t1   # Restore return address
+    jr $ra
+
+# Function to calculate power
+power:
+    move $t1, $ra   # Save return address in $t1
+    li $t2, 1    # Initialize result to 1
+    li $t3, 0    # Initialize counter to 0
+
+power_loop:
+    bge $t3, $a1, power_done  # Exit loop if counter >= exponent
+    mul $t2, $t2, $a0    # Multiply result by base
+    addi $t3, $t3, 1    # Increment counter
+    j power_loop
+
+power_done:
+    move $v0, $t2    # Return result in $v0
+    move $ra, $t1   # Restore return address
+    jr $ra
+
+main:
+    # Prompt user for angle in degrees
+    li $v0, 4
+    la $a0, angle_prompt
+    syscall
+
+    # Read angle from user
+    li $v0, 5
+    syscall
+    move $a0, $v0    # Store angle in $a0
+
+    # Convert angle to radians
+    li $v0, 4
+    la $a0, result_msg
+    syscall
+
+    li $v0, 2    # Print integer
+    move $a0, $v0    # Load angle into $a0
+    jal fact    # Calculate factorial of angle
+
+    move $t0, $v0    # Save factorial in $t0
+
+    li $v0, 2    # Print integer
+    li $a0, 180    # Load 180 into $a0
+    jal fact    # Calculate factorial of 180
+
+    move $t1, $v0    # Save factorial of 180 in $t1
+
+    div $t0, $t1    # Divide factorial of angle by factorial of 180
+    mflo $t0    # Save result in $t0
+
+    li $v0, 2    # Print integer
+    move $a0, $v0    # Load angle into $a0
+    move $a1, $t0    # Load result into $a1
+    jal power    # Calculate power of angle
+
+    move $t2, $v0    # Save power in $t2
+
+    li $v0, 2    # Print integer
+    li $a0, 1    # Load 1 into $a0
+    jal fact    # Calculate factorial of 1 (used for denominator)
+
+    move $t3, $v0    # Save factorial of 1 in $t3
+
+    div $t2, $t3    # Divide power by factorial of 1
+    mflo $t2    # Save result in $t2
+
+    div $t2, $t3    # Divide result by factorial of 1 again
+    mflo $t2    # Save result in $t2
+
+    sub $t2, $t2, $a0    # Subtract angle from result
+
+    move $v0, $t2    # Return result in $v0
+
+    li $v0, 10    # Exit program
+    syscall
